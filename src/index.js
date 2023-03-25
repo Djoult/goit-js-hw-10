@@ -16,51 +16,83 @@ searchBox.addEventListener(
 // fetchCountries('Ukraine');
 function handleCountryInput(e) {
   // e.preventDefault();
-  const text = e.target.value.trim();
-  if (text === '') {
-    countryInfo.innerHTML = '';
-    countryInfo.innerHTML = '';
+  const query = e.target.value.trim();
+  if (query === '') {
+    clearMarkUp();
     return;
   }
-  fetchCountries(text)
+  fetchCountries(query)
     .then(data => {
+      console.log(data[0].name);
       if (data.length > 10) {
+        clearMarkUp();
         Notiflix.Notify.info(
           'Too many matches found. Please enter a more specific name.'
         );
+        return;
       }
-      if (data.length < 10 && data.length > 1) {
-        createCountryList(data);
+      if (data.length <= 10 && data.length > 1) {
+        clearMarkUp();
+        createCountriesList(data);
+        return;
       }
-      countryInfo.insertAdjacentHTML('beforeend', createCountryMarkUp(data));
+      clearMarkUp();
+      createCountry(data);
     })
-    .catch(error =>
-      Notiflix.Notify.failure('Oops, there is no country with that name')
-    );
+    .catch(() => {
+      clearMarkUp();
+      Notiflix.Notify.failure('Oops, there is no country with that name');
+    });
+
   // fetchCountries(text).then(console.log);
 }
 
-function createCountryMarkUp(country) {
-  return `<img src='${country.flags.svg}' alt='flag' />
-  <h2 class='country-name'>${country.name.official}</h2>
+function createCountriesList(countries) {
+  countries.map(({ flags, name }) => {
+    countryList.insertAdjacentHTML(
+      'beforeend',
+      `
+        <li class="country-list__item">
+          <img width="30"
+            class="country-flag"
+            src="${flags.svg}"
+            alt="flag of ${name.official}"
+          >
+          <p class="country-name">${name.official}</p>
+        </li>
+      `
+    );
+  });
+}
+
+function createCountry(country) {
+  country.map(({ name, flags, capital, population, languages }) => {
+    countryInfo.insertAdjacentHTML(
+      'beforeend',
+      `<div class="country__wrapper"><img src='${
+        flags.svg
+      }' class="country-flag" width ="50" alt='flag of ${name.official}' />
+  <h2 class='country-name'>${name.official}</h2></div>
   <ul class='country-info__list'>
     <li class='country-info__item'>
       <p class='capital-name'><span class='subtitle'>Capital: </span>
-        ${country.capital}</p>
+        ${capital}</p>
     </li>
     <li class='country-info__item'>
       <p class='population'><span class='subtitle'>Population: </span>
-        ${country.population}</p>
+        ${population}</p>
     </li>
     <li class='country-info__item'>
       <p class='languages'><span class='subtitle'>Languages: </span>
-        ${country.languages}</p>
+        ${Object.values(languages)}</p>
     </li>
-  </ul>`;
+  </ul>
+      `
+    );
+  });
 }
 
-function createCountryList(countries) {
-  countries.map(country => {
-    return `<li class="country-item">{country.name}</li>;`;
-  });
+function clearMarkUp() {
+  countryInfo.innerHTML = '';
+  countryList.innerHTML = '';
 }
